@@ -188,7 +188,7 @@ struct EditTransactionView: View {
                     .padding(.bottom, 70)
                     
                     Spacer()
-                }.padding(.top, -90)
+                }
             }
         }
         .navigationBarTitle(Text((id != nil) ? "Edit Transaction" : "New Transaction"))
