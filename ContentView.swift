@@ -52,6 +52,14 @@ struct FirstTab: View {
         UITableView.appearance().separatorStyle = .none
         UITableView.appearance().separatorColor = .clear
     }
+    
+    func deleteTransaction(at offsets: IndexSet) {
+        
+        TransactionList.shared.list.remove(atOffsets: offsets)
+        TransactionList.shared.updateJsonAfterTransactionDeleted()
+        
+    }
+    
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
@@ -62,14 +70,15 @@ struct FirstTab: View {
                     Section(header: Text("Today")
                                 .foregroundColor(Color("mainBlack"))
                                 .font(.custom("Helvetica Neue", size: 20))
-                                
                                 .fontWeight(.light)
                     ) {
-                        List(TransactionList.shared.list) { transaction in
-                            NavigationLink(destination: DetailView(transaction: transaction)) {
-                                TransactionCell(transaction: transaction)
-                                
+                        List{
+                            ForEach(TransactionList.shared.list, id: \.self){ transaction in
+                                NavigationLink(destination: EditTransactionView(id: transaction.id)) {
+                                    TransactionCell(transaction: transaction)
+                                }
                             }
+                            .onDelete(perform: deleteTransaction)
                         }
                         .padding(.leading, -10)
                         .listRowBackground(Color.clear)
@@ -79,12 +88,11 @@ struct FirstTab: View {
             }
             
             .navigationBarTitle(Text("Personal transactions"))
-            .navigationViewStyle(StackNavigationViewStyle())
             
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     NavigationLink(
-                        destination: AddNewTransactionView(),
+                        destination: EditTransactionView(),
                         label: {
                             Text("Add new")
                         })
@@ -96,17 +104,10 @@ struct FirstTab: View {
                         
                     }
                 }
-            }.alert(isPresented: $showingAlert) {
+            }
+            .alert(isPresented: $showingAlert) {
                 Alert(title: Text("Important message"), message: Text("Under development!"), dismissButton: .default(Text("Got it!")))
             }
-            Button("Filter") {
-                print("Filters tapped!")
-                showingAlert = true
-                
-            }.alert(isPresented: $showingAlert) {
-                Alert(title: Text("Important message"), message: Text("Under development!"), dismissButton: .default(Text("Got it!")))
-            }
-            
         }
     }
 }
@@ -124,19 +125,13 @@ struct SecondTab: View {
     }
 }
 
-struct DetailView: View {
-    var transaction: Transaction
-    var body: some View {
-        LinearGradient(gradient: Gradient(colors: [Color("mainPink"), Color("mainGray")]), startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-    }
-}
-struct AddNewTransactionView: View {
+struct EditTransactionView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var details: String = ""
     @State private var category: String = ""
     @State private var date: Date = Date()
     @State private var value: String = ""
-    
+    var id: UUID?
     
     func cleanCurrency(_ value: String?) -> String {
         guard value != nil else { return "0.00" }
@@ -167,29 +162,48 @@ struct AddNewTransactionView: View {
                         .padding(.all, 25)
                     TextField("Enter description", text: $details)
                         .padding(.all, 25)
+                    
                     TextField("Enter category", text: $category)
                         .padding(.all, 25)
                     
                     DatePicker(selection: $date, label: { Text("Select Date") })
                         .padding(.all, 25)
                     
-                    Spacer()
                     Button("Done"){
-                        let transaction = Transaction(id: UUID(), details: details, category: category, date: date, amount: Int(Float(value)!*100))
-                        TransactionList.shared.addTransaction(newTransaction: transaction)
+                        
+                        let transaction = Transaction(id: (id != nil) ? id! : UUID(), details: details, category: category, date: date, amount: Int(Float(value)!*100))
+                        
+                        if (id != nil){
+                            TransactionList.shared.editTransaction(withNewTransactionData: transaction, UUID: id!)
+                            
+                        } else {
+                            
+                            TransactionList.shared.addTransaction(newTransaction: transaction)
+                        }
                         self.presentationMode.wrappedValue.dismiss()
                     }
                     .disabled(self.details.isEmpty)
                     .disabled(self.category.isEmpty)
                     .disabled(self.value.isEmpty)
-                    .padding(.bottom, 30)
-                }
+                    .padding(.bottom, 70)
+                    
+                    Spacer()
+                }.padding(.top, -90)
+            }
+        }
+        .navigationBarTitle(Text((id != nil) ? "Edit Transaction" : "New Transaction"))
+        .onAppear {
+            if let transaction = TransactionList.shared.list.first(where: {$0.id == self.id}){
+                
+                details = transaction.details
+                category = transaction.category
+                date = transaction.date
+                value = String("\(Float(transaction.amount)/100)")
                 
             }
-            
         }
-        .navigationBarTitle(Text("New Transaction"))
     }
+    
 }
 
 struct ContentView_Previews: PreviewProvider {

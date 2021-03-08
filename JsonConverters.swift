@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Transaction: Identifiable, Encodable {
+struct Transaction: Identifiable, Encodable, Hashable {
     var id = UUID()
     var details: String
     var category: String
@@ -88,6 +88,30 @@ class TransactionList: NSObject, ObservableObject {
         var jsonArr: [Transaction] = []
         for item in list {
             jsonArr.append(item)
+        }
+        let data = try! encoder.encode(newTransaction)
+        print(String(data: data, encoding: .utf8)!)
+        
+        self.writeJson(filename: "transaction_list", allSiteKeys: list)
+    }
+    
+    func updateJsonAfterTransactionDeleted(){
+        self.writeJson(filename: "transaction_list", allSiteKeys: list)
+    }
+    
+    func editTransaction(withNewTransactionData newTransaction: Transaction, UUID: UUID){
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        encoder.dateEncodingStrategy = .iso8601
+        
+        
+        if let transactionOffset = TransactionList.shared.list.firstIndex(where: {$0.id == UUID}) {
+            TransactionList.shared.list[transactionOffset] = newTransaction
+        }
+        
+        list.sort {
+            
+            (($0).date.compare($1.date)) == .orderedDescending
         }
         let data = try! encoder.encode(newTransaction)
         print(String(data: data, encoding: .utf8)!)
