@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1F4D577E-AA63-49F5-80AF-44E383DF8948",
+    "amount": 15,
+    "details": "First Transaction",
+    "category": "food",
+    "date": "2019-04-25T11:07:19Z"
+  },
+  {
+    "id": "1F4D577E-AA63-49F5-80AF-44E383DF8949",
+    "amount": 20,
+    "details": "Second Transaction",
+    "category": "drink",
+    "date": "2019-04-25T11:07:38Z"
+  },
+  {
+    "id": "1F4D577E-AA63-49F5-80AF-44E383DF8940",
+    "amount": 25,
+    "details": "Third Transaction",
+    "category": "home",
+    "date": "2019-04-25T11:06:38Z"
+  }
+]
