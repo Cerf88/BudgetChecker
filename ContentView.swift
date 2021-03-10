@@ -67,13 +67,13 @@ struct FirstTab: View {
                 
                 Form{
                     
-                    Section(header: Text("Today")
+                    Section(header: Text("All")
                                 .foregroundColor(Color("mainBlack"))
                                 .font(.custom("Helvetica Neue", size: 20))
                                 .fontWeight(.light)
                     ) {
                         List{
-                            ForEach(TransactionList.shared.list, id: \.self){ transaction in
+                            ForEach(TransactionList.shared.list, id: \.id){ transaction in
                                 NavigationLink(destination: EditTransactionView(id: transaction.id)) {
                                     TransactionCell(transaction: transaction)
                                 }
@@ -87,7 +87,7 @@ struct FirstTab: View {
                 }
             }
             
-            .navigationBarTitle(Text("Personal transactions"))
+            .navigationBarTitle(Text("Personal transactions"), displayMode: .inline)
             
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -133,16 +133,6 @@ struct EditTransactionView: View {
     @State private var value: String = ""
     var id: UUID?
     
-    func cleanCurrency(_ value: String?) -> String {
-        guard value != nil else { return "0.00" }
-        let doubleValue = Double(value!) ?? 0.0
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.minimumFractionDigits = (value!.contains(".")) ? 0 : 2
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: doubleValue)) ?? "\(doubleValue)"
-    }
-    
     var body: some View {
         NavigationView{
             ZStack (alignment: .top) {
@@ -152,13 +142,18 @@ struct EditTransactionView: View {
                     TextField("Enter amount", text: $value)
                         .onReceive(Just(value)) { newValue in
                             
-                            let filtered = newValue.filter {$0.isNumber || ".".contains($0)}
+                            var filtered = newValue.filter {$0.isNumber || (".,".contains($0))}
+                            let filteredDot = (filtered.replacingOccurrences(of: ",", with: "."))
+                            if Float(filteredDot) != nil{
+                                filtered = "\(filteredDot)"
+                            } else {
+                                filtered = String(filtered.dropLast())
+                            }
                             if filtered != newValue {
-                                
-                                self.value = filtered
+                                    self.value = "\(filtered)"
                             }
                         }
-                        .keyboardType(.numbersAndPunctuation)
+                        .keyboardType(.decimalPad)
                         .padding(.all, 25)
                     TextField("Enter description", text: $details)
                         .padding(.all, 25)
@@ -180,6 +175,7 @@ struct EditTransactionView: View {
                             
                             TransactionList.shared.addTransaction(newTransaction: transaction)
                         }
+                        
                         self.presentationMode.wrappedValue.dismiss()
                     }
                     .disabled(self.details.isEmpty)
