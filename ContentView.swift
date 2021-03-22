@@ -22,7 +22,7 @@ struct ContentView: View {
         
         TabView(selection: $selection) {
             
-            FirstTab()
+            PersonalTransactionsView()
                 .tabItem {
                     Image(systemName: selection == 0 ? "person.fill": "person").renderingMode(.template)
                     Text("Personal")
@@ -41,88 +41,6 @@ struct ContentView: View {
         
     }
     
-}
-
-struct FirstTab: View {
-    @State private var showingAlert = false
-    @ObservedObject var transactionData = TransactionList.shared
-    init() {
-        UITableView.appearance().backgroundColor = .clear
-        UITableViewCell.appearance().backgroundColor = .clear
-        UITableView.appearance().separatorStyle = .none
-        UITableView.appearance().separatorColor = .clear
-    }
-    
-    func deleteTransaction(at offsets: IndexSet) {
-        
-        TransactionList.shared.list.remove(atOffsets: offsets)
-        TransactionList.shared.updateJsonAfterTransactionDeleted()
-        
-    }
-    
-    var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                LinearGradient(gradient: Gradient(colors: [Color("mainPink"), Color("mainGray")]), startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-                
-                Form{
-                    
-                    Section(header: Text("All")
-                                .foregroundColor(Color("mainBlack"))
-                                .font(.custom("Helvetica Neue", size: 20))
-                                .fontWeight(.light)
-                    ) {
-                        List{
-                            ForEach(TransactionList.shared.list, id: \.id){ transaction in
-                                NavigationLink(destination: EditTransactionView(id: transaction.id)) {
-                                    TransactionCell(transaction: transaction)
-                                }
-                            }
-                            .onDelete(perform: deleteTransaction)
-                        }
-                        .padding(.leading, -10)
-                        .listRowBackground(Color.clear)
-                    }
-                    
-                }
-            }
-            
-            .navigationBarTitle(Text("Personal transactions"), displayMode: .inline)
-            
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    NavigationLink(
-                        destination: EditTransactionView(),
-                        label: {
-                            Text("Add new")
-                        })
-                }
-                ToolbarItemGroup(placement: .navigationBarLeading) {
-                    Button("Filters") {
-                        print("Filters tapped!")
-                        showingAlert.toggle()
-                        
-                    }
-                }
-            }
-            .alert(isPresented: $showingAlert) {
-                Alert(title: Text("Important message"), message: Text("Under development!"), dismissButton: .default(Text("Got it!")))
-            }
-        }
-    }
-}
-
-struct SecondTab: View {
-    var body: some View {
-        ZStack {
-            LinearGradient(gradient: Gradient(colors: [Color("mainPink"), Color("mainGray")]), startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-            
-            VStack {
-                Text("Under development")
-                    .foregroundColor(Color("mainBlack"))
-            }
-        }
-    }
 }
 
 struct EditTransactionView: View {
@@ -187,7 +105,7 @@ struct EditTransactionView: View {
                 }
             }
         }
-        .navigationBarTitle(Text((id != nil) ? "Edit Transaction" : "New Transaction"))
+        .navigationBarTitle(Text((id != nil) ? "Edit Transaction" : "New Transaction"), displayMode: .inline)
         .onAppear {
             if let transaction = TransactionList.shared.list.first(where: {$0.id == self.id}){
                 
