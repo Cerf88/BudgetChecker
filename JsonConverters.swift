@@ -51,12 +51,12 @@ struct TransactionJSONData: Codable {
 class TransactionList: NSObject, ObservableObject {
     private var jSoLlist: Array<TransactionJSONData> = []
     @Published var list: Array<Transaction> = []
+    var sections: [Day] = []
     private var destURL: URL!
     private var fileName: String = "transaction_list.json"
     static let shared = TransactionList()
     private override init() {
         super .init()
-        
         
         self.destURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent(fileName)
         
@@ -74,6 +74,26 @@ class TransactionList: NSObject, ObservableObject {
             loadTransactions(FromFileNamed: fileName)
         }
     }
+    struct Day: Identifiable {
+        let id = UUID()
+        let title: String
+        let transactions: [Transaction]
+        let date: Date
+    }
+    func completeDictionareAfterAnyUpdate() {
+        let dateFormatter = DateFormatter()
+                dateFormatter.dateStyle = .medium
+                dateFormatter.timeStyle = .none
+        
+        let grouped = Dictionary(grouping: self.list) { (transaction: Transaction) -> String in
+                    dateFormatter.string(from: transaction.date)
+                }
+        
+        self.sections = grouped.map { day -> Day in
+            Day(title: day.key, transactions: day.value, date: day.value[0].date)
+               }.sorted { $0.date > $1.date }
+        
+    }
     
     func addTransaction(newTransaction: Transaction){
         let encoder = JSONEncoder()
@@ -85,6 +105,7 @@ class TransactionList: NSObject, ObservableObject {
             
             (($0).date.compare($1.date)) == .orderedDescending
         }
+        completeDictionareAfterAnyUpdate()
         var jsonArr: [Transaction] = []
         for item in list {
             jsonArr.append(item)
@@ -113,6 +134,7 @@ class TransactionList: NSObject, ObservableObject {
             
             (($0).date.compare($1.date)) == .orderedDescending
         }
+        completeDictionareAfterAnyUpdate()
         let data = try! encoder.encode(newTransaction)
         print(String(data: data, encoding: .utf8)!)
         
@@ -139,6 +161,8 @@ class TransactionList: NSObject, ObservableObject {
             
             (($0).date.compare($1.date)) == .orderedDescending
         }
+        
+        completeDictionareAfterAnyUpdate()
         
     }
     

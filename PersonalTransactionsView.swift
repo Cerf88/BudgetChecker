@@ -23,6 +23,7 @@ struct PersonalTransactionsView: View {
     func deleteTransaction(at offsets: IndexSet) {
         
         TransactionList.shared.list.remove(atOffsets: offsets)
+        TransactionList.shared.completeDictionareAfterAnyUpdate()
         TransactionList.shared.updateJsonAfterTransactionDeleted()
         
     }
@@ -32,25 +33,24 @@ struct PersonalTransactionsView: View {
             ZStack(alignment: .top) {
                 LinearGradient(gradient: Gradient(colors: [Color("mainPink"), Color("mainGray")]), startPoint: .top, endPoint: .bottom).ignoresSafeArea()
                 
-                Form{
-                    
-                    Section(header: Text("All")
-                                .foregroundColor(Color("mainBlack"))
-                                .font(.custom("Helvetica Neue", size: 20))
-                                .fontWeight(.light)
-                    ) {
-                        List{
-                            ForEach(TransactionList.shared.list, id: \.id){ transaction in
+                List{
+                    ForEach(TransactionList.shared.sections) { section in
+                        Section(header: Text(section.title)
+                                    .foregroundColor(Color("mainBlack"))
+                                    .font(.custom("Helvetica Neue", size: 20))
+                                    .fontWeight(.light)
+                        ) {
+                            ForEach(section.transactions) { transaction in
                                 NavigationLink(destination: EditTransactionView(id: transaction.id)) {
                                     TransactionCell(transaction: transaction)
                                 }
                             }
                             .onDelete(perform: deleteTransaction)
                         }
-                        .padding(.leading, -10)
-                        .listRowBackground(Color.clear)
+                        
                     }
                     
+                    .listRowBackground(Color.clear)
                 }
             }
             
