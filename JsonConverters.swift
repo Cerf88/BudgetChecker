@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Transaction: Identifiable, Encodable, Hashable {
+struct Transaction: Identifiable, Codable, Hashable {
     var id = UUID()
     var details: String
     var category: String
@@ -16,41 +16,10 @@ struct Transaction: Identifiable, Encodable, Hashable {
     
 }
 
-struct TransactionJSONData: Codable {
-    let amount: Int
-    let details, category: String
-    let date: Date
-    let id: UUID
-    
-    enum CodingKeys: String, CodingKey {
-        case id = "id"
-        case amount = "amount"
-        case details = "details"
-        case category = "category"
-        case date = "date"
-        
-    }
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        amount = try container.decode(Int.self, forKey: .amount)
-        details = try container.decode(String.self, forKey: .details)
-        category = try container.decode(String.self, forKey: .category)
-        date = try container.decode(Date.self, forKey: .date)
-        id = try container.decode(UUID.self, forKey: .id)
-    }
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(amount, forKey: .amount)
-        try container.encode(details, forKey: .details)
-        try container.encode(category, forKey: .category)
-        try container.encode(date, forKey: .date)
-        try container.encode(id, forKey: .id)
-    }
-}
-
 class TransactionList: NSObject, ObservableObject {
-    private var jSoLlist: Array<TransactionJSONData> = []
-    @Published var list: Array<Transaction> = []
+
+    @Published var list: [Transaction] = []
+    var categories: [String] = []
     var sections: [Day] = []
     private var destURL: URL!
     private var fileName: String = "transaction_list.json"
@@ -74,6 +43,18 @@ class TransactionList: NSObject, ObservableObject {
             loadTransactions(FromFileNamed: fileName)
         }
     }
+    
+    func load<T: Decodable>(_ data: Data) -> T {
+
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            fatalError("Couldn't parse as \(T.self):\n\(error)")
+        }
+    }
+    
     struct Day: Identifiable {
         let id = UUID()
         let title: String
@@ -81,6 +62,13 @@ class TransactionList: NSObject, ObservableObject {
         let date: Date
     }
     func completeDictionareAfterAnyUpdate() {
+        
+        for item in list {
+            if !categories.contains(item.category){
+                categories.append(item.category)
+            }
+        }
+        
         let dateFormatter = DateFormatter()
                 dateFormatter.dateStyle = .medium
                 dateFormatter.timeStyle = .none
@@ -109,6 +97,9 @@ class TransactionList: NSObject, ObservableObject {
         var jsonArr: [Transaction] = []
         for item in list {
             jsonArr.append(item)
+            if !categories.contains(item.category){
+                categories.append(item.category)
+            }
         }
         let data = try! encoder.encode(newTransaction)
         print(String(data: data, encoding: .utf8)!)
@@ -142,28 +133,16 @@ class TransactionList: NSObject, ObservableObject {
     }
     
     private func updateListforTransactions(withJSONData data: Data){
-        
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let transaction = try! decoder.decode([TransactionJSONData].self, from: data)
-        jSoLlist = transaction
-        
-        
-        for item in jSoLlist {
-            
-            let transactionItem = Transaction(id: item.id, details: item.details, category: item.category, date: item.date, amount: item.amount)
-            
-            list.append(transactionItem)
-        }
+
+        list = load(data)
         
         list.sort {
-            
+
             (($0).date.compare($1.date)) == .orderedDescending
         }
-        
+
         completeDictionareAfterAnyUpdate()
-        
+
     }
     
     private func copyFileFromBundleToDocumentsFolder(sourceFile: String, destinationFile: String = "") {

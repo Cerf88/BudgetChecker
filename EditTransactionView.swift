@@ -14,6 +14,7 @@ struct EditTransactionView: View {
     @State private var category: String = ""
     @State private var date: Date = Date()
     @State private var value: String = ""
+    @State private var completedCategory: Bool = false
     var id: UUID?
     
     var body: some View {
@@ -23,6 +24,7 @@ struct EditTransactionView: View {
                 
                 VStack {
                     TextField("Enter amount", text: $value)
+                        
                         .onReceive(Just(value)) { newValue in
                             
                             var filtered = newValue.filter {$0.isNumber || (".,".contains($0))}
@@ -38,11 +40,40 @@ struct EditTransactionView: View {
                         }
                         .keyboardType(.decimalPad)
                         .padding(.all, 25)
+                    
                     TextField("Enter description", text: $details)
                         .padding(.all, 25)
                     
-                    TextField("Enter category", text: $category)
+                    TextField("Enter category", text: $category, onEditingChanged: { (isBegin) in
+                        if isBegin {
+                            self.completedCategory = true
+                        } else {
+                            self.completedCategory = false
+                        }
+                    },
+                    onCommit: {
+                        self.completedCategory = false
+                    })
                         .padding(.all, 25)
+                    
+                    if completedCategory {
+                        ScrollView([.horizontal], showsIndicators: false) {
+                            HStack(spacing: 20) {
+                                ForEach(TransactionList.shared.categories.filter{$0.hasPrefix(category)}, id: \.self) {filteredCategory in
+                                    Text("\(filteredCategory)")
+                                        .onTapGesture{
+                                            self.category = filteredCategory
+                                            self.completedCategory = false
+                                            hideKeyboard()
+                                        }
+                                }
+                            .listRowBackground(Color.clear)
+                            }
+                            .padding(.leading, 5)
+                        }
+                    }
+                    
+                    
                     
                     DatePicker(selection: $date, label: { Text("Select Date") })
                         .padding(.all, 25)
@@ -84,3 +115,23 @@ struct EditTransactionView: View {
     }
     
 }
+
+struct EditTransactionView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            EditTransactionView()
+              .environment(\.colorScheme, .light)
+
+            EditTransactionView()
+              .environment(\.colorScheme, .dark)
+        }
+    }
+}
+
+#if canImport(UIKit)
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+#endif
