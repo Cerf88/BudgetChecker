@@ -8,7 +8,7 @@
 import SwiftUI
 
 
-struct SecondTab: View {
+struct FamilyTransactionsView: View {
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [Color("mainPink"), Color("mainGray")]), startPoint: .top, endPoint: .bottom).ignoresSafeArea()
@@ -18,5 +18,13 @@ struct SecondTab: View {
                     .foregroundColor(Color("mainBlack"))
             }
         }
+    }
+}
+
+struct FamilyTransactionsView_Previews: PreviewProvider {
+    static var previews: some View {
+        FamilyTransactionsView().environmentObject(TransactionList.shared)
+
+
     }
 }

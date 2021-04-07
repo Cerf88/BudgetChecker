@@ -69,7 +69,7 @@ struct EditTransactionView: View {
                                 }
                             .listRowBackground(Color.clear)
                             }
-                            .padding(.leading, 5)
+                            .padding(.leading, 15)
                         }
                     }
                     
@@ -116,17 +116,17 @@ struct EditTransactionView: View {
     
 }
 
-struct EditTransactionView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            EditTransactionView()
-              .environment(\.colorScheme, .light)
-
-            EditTransactionView()
-              .environment(\.colorScheme, .dark)
-        }
-    }
-}
+//struct EditTransactionView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        Group {
+//            EditTransactionView()
+//              .environment(\.colorScheme, .light)
+//
+//            EditTransactionView()
+//              .environment(\.colorScheme, .dark)
+//        }
+//    }
+//}
 
 #if canImport(UIKit)
 extension View {

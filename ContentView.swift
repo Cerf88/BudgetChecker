@@ -10,8 +10,6 @@ import SwiftUI
 struct ContentView: View {
     
     init() {
-        //        UITabBar.appearance().barTintColor = UIColor(named: "mainGray")
-        
         UITabBar.appearance().barTintColor = UIColor(named: "mainBlue")
         UINavigationBar.appearance().barTintColor = UIColor(named: "mainBlue")
     }
@@ -28,7 +26,7 @@ struct ContentView: View {
                 }
                 .tag(0)
             
-            SecondTab()
+            FamilyTransactionsView()
                 .tabItem {
                     Image(systemName: selection == 1 ? "person.3.fill": "person.3")
                     Text("Family")

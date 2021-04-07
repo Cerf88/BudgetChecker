@@ -84,3 +84,11 @@ struct PersonalTransactionsView: View {
         }
     }
 }
+
+struct PersonalTransactionsView_Previews: PreviewProvider {
+    static var previews: some View {
+        PersonalTransactionsView().environmentObject(TransactionList.shared)
+        
+
+    }
+}
